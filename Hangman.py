@@ -1,0 +1,199 @@
+import pygame
+import random
+
+pygame.init()
+pygame.font.init()
+tlarg = 821
+talt = 600
+pygame.display.set_caption('Hangman')
+fonte = pygame.font.SysFont('Candaras', 70)
+win = pygame.display.set_mode((tlarg, talt), pygame.FULLSCREEN)
+default = (247, 197, 0)
+looser = (138, 7, 7)
+winner = (97, 138, 61)
+with open('words.txt', 'r') as f:
+    names =[line.strip() for line in f]
+
+
+class Game(object):
+    def __init__(self):
+        self.word = random.choice(names)
+        self.misses = 0
+        self.letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', ' I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+                        'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+        self.pos = [(381, 50), (381, 135), (381, 220), (381, 305),
+                    (477, 50), (477, 135), (477, 220), (477, 305), (477, 390), (477, 475),
+                    (573, 50), (573, 135), (573, 220), (573, 305), (573, 390), (573, 475),
+                    (669, 50), (669, 135), (669, 220), (669, 305), (669, 390), (669, 475),
+                    (765, 50), (765, 135), (765, 220), (765, 305)]
+        self.lines = []
+        self.discovered_letters = []
+        self.color = default
+        self.score = 1000 * names.index(self.word) / len(names)
+
+
+game = Game()
+
+
+def dr(x1, x2, y1, y2):
+    return((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+
+
+def ocurrs(letter, string):
+    po = []
+    for le in enumerate(string):
+        if le[1] == letter:
+            po.append(le[0])
+    return po
+
+
+def organize(lines):
+    old_list = lines
+    new_list = []
+    for _ in range(0, len(old_list)):
+        b = 1000
+        c = None
+        for x in enumerate(old_list):
+            if x[1][0] < b:
+                b = x[1][0]
+                c = x[0]
+        if old_list[c][0] < old_list[c][1]:
+            new_list.append(old_list[c])
+        else:
+            new_list.append((old_list[c][1], old_list[c][0]))
+        old_list.remove(old_list[c])
+    return new_list
+
+
+def new_game():
+    game.word = random.choice(names)
+    game.misses = 0
+    game.letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', ' I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+                    'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    game.pos = [(381, 50), (381, 135), (381, 220), (381, 305),
+                (477, 50), (477, 135), (477, 220), (477, 305), (477, 390), (477, 475),
+                (573, 50), (573, 135), (573, 220), (573, 305), (573, 390), (573, 475),
+                (669, 50), (669, 135), (669, 220), (669, 305), (669, 390), (669, 475),
+                (765, 50), (765, 135), (765, 220), (765, 305)]
+    game.lines = []
+    game.discovered_letters = []
+    game.color = default
+    if len(game.word) % 2 == 0:
+        l = len(game.word) - 2
+        game.lines.append((355, 400))
+        game.lines.append((405, 450))
+        while l > 0:
+            if l % 2 == 0:
+                game.lines.append((405 + (len(game.word) - l) * 25, 450 + (len(game.word) - l) * 25))
+                l -= 1
+            else:
+                game.lines.append((425 - (len(game.word) - l) * 25, 380 - (len(game.word) - l) * 25))
+                l -= 1
+    else:
+        l = len(game.word) - 1
+        game.lines.append((380, 425))
+        while l > 0:
+            if l % 2 == 0:
+                game.lines.append((405 + (len(game.word) - l) * 25, 450 + (len(game.word) - l) * 25))
+                l -= 1
+            else:
+                game.lines.append((425 - (len(game.word) - l) * 25, 380 - (len(game.word) - l) * 25))
+                l -= 1
+    game.lines = organize(game.lines)
+    game.score = 1000 * names.index(game.word) / len(names)
+
+
+if len(game.word) % 2 == 0:
+    l = len(game.word) - 2
+    game.lines.append((355, 400))
+    game.lines.append((405, 450))
+    while l > 0:
+        if l % 2 == 0:
+            game.lines.append((405 + (len(game.word) - l) * 25, 450 + (len(game.word) - l) * 25))
+            l -= 1
+        else:
+            game.lines.append((425 - (len(game.word) - l) * 25, 380 - (len(game.word) - l) * 25))
+            l -= 1
+else:
+    l = len(game.word) - 1
+    game.lines.append((380, 425))
+    while l > 0:
+        if l % 2 == 0:
+            game.lines.append((405 + (len(game.word) - l) * 25, 450 + (len(game.word) - l) * 25))
+            l -= 1
+        else:
+            game.lines.append((425 - (len(game.word) - l) * 25, 380 - (len(game.word) - l) * 25))
+            l -= 1
+game.lines = organize(game.lines)
+run = True
+while run:
+    pygame.time.Clock()
+    win.fill(game.color)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                run = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if game.color != default:
+                new_game()
+            for p in game.pos:
+                if p is not None:
+                    if dr(pygame.mouse.get_pos()[0], p[0], pygame.mouse.get_pos()[1], p[1]) < 40:
+                        letter = game.letters[game.pos.index(p)][-1].lower()
+                        if letter in game.word:
+                            for o in ocurrs(letter, game.word):
+                                game.discovered_letters.append((letter, o))
+
+                        else:
+                            game.misses += 1
+
+                        game.pos[game.pos.index(p)] = None
+
+    pygame.draw.rect(win, (0, 0, 0), (50, 40, 20, 470))
+    pygame.draw.rect(win, (0, 0, 0), (50, 40, 200, 20))
+    pygame.draw.rect(win, (0, 0, 0), (250, 40, 20, 75))
+    pygame.draw.rect(win, (0, 0, 0), (195, 115, 130, 20))
+
+    if game.misses > 0:
+        pygame.draw.circle(win, (0, 0, 0), (260, 200), 50, 4)
+        if game.misses > 1:
+            pygame.draw.line(win, (0, 0, 0), (260, 255), (260, 400), 4)
+            if game.misses > 2:
+                pygame.draw.line(win, (0, 0, 0), (265, 405), (300, 500), 4)
+                if game.misses > 3:
+                    pygame.draw.line(win, (0, 0, 0), (255, 405), (220, 500), 4)
+                    if game.misses > 4:
+                        pygame.draw.line(win, (0, 0, 0), (255, 305), (220, 380), 4)
+                        if game.misses > 5:
+                            pygame.draw.line(win, (0, 0, 0), (265, 305), (300, 380), 4)
+                        if game.misses > 6:
+                            pygame.draw.line(win, (0, 0, 0), (230, 190), (250, 170), 4)
+                            pygame.draw.line(win, (0, 0, 0), (230, 170), (250, 190), 4)
+                            pygame.draw.line(win, (0, 0, 0), (270, 190), (290, 170), 4)
+                            pygame.draw.line(win, (0, 0, 0), (270, 170), (290, 190), 4)
+                            game.color = looser
+                            for p in game.pos:
+                                if p is not None:
+                                    letter = game.letters[game.pos.index(p)][-1].lower()
+                                    if letter in game.word:
+                                        for o in ocurrs(letter, game.word):
+                                            game.discovered_letters.append((letter, o))
+    if len(game.discovered_letters) == len(game.word):
+        game.color = winner
+    for line in game.lines:
+        pygame.draw.line(win, (0, 0, 0), (line[0], 580), (line[1], 580))
+    for dl in game.discovered_letters:
+        win.blit(fonte.render(dl[0], False, (0, 0, 0)), (game.lines[dl[1]][0], 540))
+    for p in game.pos:
+        if p is not None:
+            pygame.draw.circle(win, (0, 204, 255), (p[0], p[1]), 40)
+            pygame.draw.circle(win, (0, 0, 0), (p[0], p[1]), 40, 6)
+            win.blit(fonte.render(game.letters[game.pos.index(p)], False, (0, 0, 0)), (p[0] - 20, p[1] - 20))
+    pygame.draw.circle(win, (238, 130, 238), (125, 125), 50)
+    pygame.draw.circle(win, (0, 0, 0), (125, 125), 50, 6)
+    if game.color != default:
+        win.blit(fonte.render(str(round(game.score)), False, (0, 0, 0)), (85, 105))
+    pygame.display.update()
